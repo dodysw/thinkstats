@@ -7,3 +7,4 @@ wget http://thinkstats.com/Pmf.py
 wget http://thinkstats.com/myplot.py
 wget http://thinkstats.com/descriptive.py
 wget http://thinkstats.com/risk.py
+wget http://thinkstats.com/conditional.py
