@@ -1,29 +1,107 @@
+"""This file contains code used in "Think Stats",
+by Allen B. Downey, available from greenteapress.com
+
+Copyright 2010 Allen B. Downey
+License: GNU GPLv3 http://www.gnu.org/licenses/gpl.html
+"""
+
 import survey
-import thinkstats
-import math
 
-table = survey.Pregnancies()
-table.ReadRecords()
-print 'Number of pregnancies', len(table.records)
+# copying Mean from thinkstats.py so we don't have to deal with
+# importing anything in Chapter 1
 
-liveBirth = sum([1 for rec in table.records if rec.outcome == 1])
-print 'Number of live birth', liveBirth
+def Mean(t):
+    """Computes the mean of a sequence of numbers.
 
-pregnancyFirst = [rec.prglength for rec in table.records if rec.outcome == 1 and rec.birthord == 1]
-pregnancyNonFirst = [rec.prglength for rec in table.records if rec.outcome == 1 and rec.birthord != 1]
+    Args:
+        t: sequence of numbers
 
-print 'Number of live birth first babies', len(pregnancyFirst)
-print 'Number of live birth non-first babies', len(pregnancyNonFirst)
+    Returns:
+        float
+    """
+    return float(sum(t)) / len(t)
 
-averagePregnancyFirst = sum(pregnancyFirst) / float(len(pregnancyFirst))
-averagePregnancyNonFirst = sum(pregnancyNonFirst) / float(len(pregnancyNonFirst))
-print 'Average pregnancy for first babies', averagePregnancyFirst, 'weeks'
-print 'Average pregnancy for after first babies', averagePregnancyNonFirst, 'weeks'
-print 'Difference', abs(averagePregnancyFirst - averagePregnancyNonFirst), 'weeks'
-print 'Difference', abs(averagePregnancyFirst - averagePregnancyNonFirst) * 7, 'days'
-print 'Difference', abs(averagePregnancyFirst - averagePregnancyNonFirst) * 7 * 24, 'hours'
 
-print "SD gestation time first baby", math.sqrt(thinkstats.Var(pregnancyFirst)), "weeks"
-print "SD gestation time others baby", math.sqrt(thinkstats.Var(pregnancyNonFirst)), "weeks"
-sdDiff = abs(math.sqrt(thinkstats.Var(pregnancyFirst)) - math.sqrt(thinkstats.Var(pregnancyNonFirst)))
-print "SD gestation time diff", sdDiff, "weeks", sdDiff * 7, "days", sdDiff * 7 * 24, "hours"
+def PartitionRecords(table):
+    """Divides records into two lists: first babies and others.
+
+    Only live births are included
+
+    Args:
+        table: pregnancy Table
+    """
+    firsts = survey.Pregnancies()
+    others = survey.Pregnancies()
+
+    for p in table.records:
+        # skip non-live births
+        if p.outcome != 1:
+            continue
+
+        if p.birthord == 1:
+            firsts.AddRecord(p)
+        else:
+            others.AddRecord(p)
+
+    return firsts, others
+
+
+def Process(table):
+    """Runs analysis on the given table.
+    
+    Args:
+        table: table object
+    """
+    table.lengths = [p.prglength for p in table.records]
+    table.n = len(table.lengths)
+    table.mu = Mean(table.lengths)
+
+
+def MakeTables(data_dir='.'):
+    """Reads survey data and returns tables for first babies and others."""
+    table = survey.Pregnancies()
+    table.ReadRecords(data_dir)
+
+    firsts, others = PartitionRecords(table)
+    
+    return table, firsts, others
+
+
+def ProcessTables(*tables):
+    """Processes a list of tables
+    
+    Args:
+        tables: gathered argument tuple of Tuples
+    """
+    for table in tables:
+        Process(table)
+        
+        
+def Summarize(data_dir):
+    """Prints summary statistics for first babies and others.
+    
+    Returns:
+        tuple of Tables
+    """
+    table, firsts, others = MakeTables(data_dir)
+    ProcessTables(firsts, others)
+        
+    print 'Number of first babies', firsts.n
+    print 'Number of others', others.n
+
+    mu1, mu2 = firsts.mu, others.mu
+
+    print 'Mean gestation in weeks:' 
+    print 'First babies', mu1 
+    print 'Others', mu2
+    
+    print 'Difference in days', (mu1 - mu2) * 7.0
+
+
+def main(name, data_dir='.'):
+    Summarize(data_dir)
+    
+
+if __name__ == '__main__':
+    import sys
+    main(*sys.argv)
